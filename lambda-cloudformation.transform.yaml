@@ -1,0 +1,120 @@
+---
+AWSTemplateFormatVersion: '2010-09-09'
+Description: |
+  A Lambda function that converts CloudFormation SNS notification to Slack messages.
+
+Transform: AWS::Serverless-2016-10-31
+
+Parameters:
+  WebHookURL:
+    Type: String
+    Description: "Webhook URL from Slack Integration."
+
+  Target:
+    Type: String
+    Description: "Where to send the notification, to a user or channel?"
+
+Resources:
+  CFNotifyFunctionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      Path: /
+      # language=JSON
+      AssumeRolePolicyDocument: |
+        {
+            "Statement": [
+                {
+                    "Effect": "Allow",
+                    "Principal": { "Service": ["lambda.amazonaws.com"] },
+                    "Action": "sts:AssumeRole"
+                }
+            ]
+        }
+
+  CFNotifyFunctionPermissions:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref 'CFNotifyFunction'
+      Principal: 'sns.amazonaws.com'
+      Action: 'lambda:invokeFunction'
+      SourceArn: !Ref 'CFNotifyTopic'
+
+  CFNotifyFunctionPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: !Sub '${AWS::StackName}-Policy-${AWS::Region}'
+      Roles:
+        - !Ref 'CFNotifyFunctionRole'
+      # language=JSON
+      PolicyDocument: !Sub |
+        {
+            "Version": "2012-10-17",
+            "Id": "default",
+            "Statement": [
+                {
+                    "Effect": "Allow",
+                    "Action": "lambda:invokeFunction",
+                    "Resource": "${CFNotifyTopic}",
+                    "Condition": {
+                        "ArnLike": {
+                            "AWS:SourceArn": "${CFNotifyTopic}"
+                        }
+                    }
+                }
+            ]
+        }
+
+  CFNotifyFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: main.lambda_handler
+      Runtime: python2.7
+      Description: Formats and sends CloudFormation messages to Slack.
+      CodeUri: ./
+      MemorySize: 128
+      Timeout: 300
+      Role: !GetAtt ['CFNotifyFunctionRole', 'Arn']
+      Environment:
+        Variables:
+          WEBHOOK: !Ref 'WebHookURL'
+          CHANNEL: !Ref 'Target'
+
+
+  CFNotifyTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      Subscription:
+        - Endpoint: !GetAtt ['CFNotifyFunction', 'Arn']
+          Protocol: 'lambda'
+
+
+  CFNotifyTopicPolicy:
+    Type: AWS::SNS::TopicPolicy
+    Properties:
+      Topics:
+        - !Ref 'CFNotifyTopic'
+
+      # language=json
+      PolicyDocument: !Sub |
+        {
+            "Version": "2012-10-17",
+            "Statement": [
+                {
+                    "Action": [
+                        "sns:Publish"
+                    ],
+                    "Effect": "Allow",
+                    "Resource": "${CFNotifyTopic}",
+                    "Principal": "*"
+                }
+            ]
+        }
+
+
+
+Outputs:
+  CFNotifyEventSource:
+    Description: "ARN of CF SNS Topic"
+    Value: !Ref 'CFNotifyTopic'
+    Export:
+      Name: !Ref 'AWS::StackName'
