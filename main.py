@@ -1,12 +1,10 @@
 import json
+import logging
 import os
 import random
-import shlex
-import urllib
-import urllib2
 import re
-
-import logging
+import shlex
+import urllib2
 
 logging.basicConfig(format='%(message)s', level=logging.INFO)
 log = logging.getLogger(__name__)
@@ -48,7 +46,7 @@ SNS_PROPERTIES_FOR_SLACK = [
 ]
 
 
-def lambda_handler(event, context):
+def lambda_handler(event, _):
     log.info("Event: {}".format(json.dumps(event, indent=4)))
     message = event['Records'][0]['Sns']
     sns_message = message['Message']
@@ -62,7 +60,7 @@ def lambda_handler(event, context):
         log.info("Message ignored.")
         return
 
-    message = create_message(cf_message, message['TopicArn'], message['Subject'])
+    message = create_message(cf_message, message['TopicArn'])
     data = json.dumps(message, indent=4)
     webhook_url = os.getenv('WEBHOOK')
 
@@ -72,7 +70,7 @@ def lambda_handler(event, context):
     log.info("Message sent, %s received.", res.getcode())
 
 
-def create_message(cf_message, sns_arn, sns_subject):
+def create_message(cf_message, sns_arn):
     attachments = [
         create_attachment(cf_message, sns_arn)
     ]
@@ -139,7 +137,7 @@ def create_attachment(cf_message, sns_arn):
 
 
 def get_stack_region(stack_id):
-    regex = re.compile('arn:aws:cloudformation:(?P<region>[a-z]{2}-[a-z]{4,9}-[1-2]{1})')
+    regex = re.compile('arn:aws:cloudformation:(?P<region>[a-z]{2}-[a-z]{4,9}-[1-2])')
     return regex.match(stack_id).group('region')
 
 
