@@ -19,6 +19,8 @@ Resources:
     Type: AWS::IAM::Role
     Properties:
       Path: /
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
       # language=JSON
       AssumeRolePolicyDocument: |
         {
@@ -39,31 +41,6 @@ Resources:
       Action: 'lambda:invokeFunction'
       SourceArn: !Ref 'CFNotifyTopic'
 
-  CFNotifyFunctionPolicy:
-    Type: AWS::IAM::Policy
-    Properties:
-      PolicyName: !Sub '${AWS::StackName}-Policy-${AWS::Region}'
-      Roles:
-        - !Ref 'CFNotifyFunctionRole'
-      # language=JSON
-      PolicyDocument: !Sub |
-        {
-            "Version": "2012-10-17",
-            "Id": "default",
-            "Statement": [
-                {
-                    "Effect": "Allow",
-                    "Action": "lambda:invokeFunction",
-                    "Resource": "${CFNotifyTopic}",
-                    "Condition": {
-                        "ArnLike": {
-                            "AWS:SourceArn": "${CFNotifyTopic}"
-                        }
-                    }
-                }
-            ]
-        }
-
   CFNotifyFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -79,7 +56,6 @@ Resources:
           WEBHOOK: !Ref 'WebHookURL'
           CHANNEL: !Ref 'Target'
 
-
   CFNotifyTopic:
     Type: AWS::SNS::Topic
     Properties:
@@ -87,13 +63,11 @@ Resources:
         - Endpoint: !GetAtt ['CFNotifyFunction', 'Arn']
           Protocol: 'lambda'
 
-
   CFNotifyTopicPolicy:
     Type: AWS::SNS::TopicPolicy
     Properties:
       Topics:
         - !Ref 'CFNotifyTopic'
-
       # language=json
       PolicyDocument: !Sub |
         {
