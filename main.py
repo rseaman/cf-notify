@@ -78,7 +78,7 @@ def create_message(cf_message, sns_arn, sns_subject):
     ]
 
     randoms = [':hypnotoad:', ':corbinspin:']
-    for i in range(1, 8):
+    for _ in range(1, 8):
         randoms.append(':cloudformation:')
 
     emoji = random.choice(randoms)
@@ -146,13 +146,7 @@ def get_stack_region(stack_id):
 def get_stack_url(stack_id):
     region = get_stack_region(stack_id)
 
-    query = {
-        'filter': 'active',
-        'tab': 'resources',
-        'stackId': stack_id
-    }
-
-    return ('https://{region}.console.aws.amazon.com/cloudformation/home?region={region}#/stack/detail?{query}'.format(
+    return ('https://{region}.console.aws.amazon.com/cloudformation/home?region={region}#/stack/detail&stackID={stackId}'.format(
         region=region,
-        query=urllib.urlencode(query)
+        stackId=stack_id
     ))
