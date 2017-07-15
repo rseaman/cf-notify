@@ -146,7 +146,7 @@ def get_stack_region(stack_id):
 def get_stack_url(stack_id):
     region = get_stack_region(stack_id)
 
-    return ('https://{region}.console.aws.amazon.com/cloudformation/home?region={region}#/stack/detail&stackID={stackId}'.format(
+    return ('https://{region}.console.aws.amazon.com/cloudformation/home?region={region}#/stack/detail?stackId={stackId}'.format(
         region=region,
-        stackId=stack_id
+        stackId=stack_id.replace('/', '%2F')
     ))
