@@ -124,9 +124,6 @@ def create_attachment(cf_message, sns_arn):
     return {
         'mrkdwn_in': ['text', 'pretext'],
         'fallback': text,
-        'author_name': 'AWS CloudFormation',
-        'author_icon': 'https://github.com/danieljimenez/cf-notify/raw/master/aws_cloudformation.png',
-        'author_link': 'https://console.aws.amazon.com/cloudformation/home',
         'text': text,
         'footer': sns_arn,
         'footer_icon': 'https://github.com/danieljimenez/cf-notify/raw/master/aws_sns.png',
