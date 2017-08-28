@@ -75,7 +75,7 @@ def create_message(cf_message, sns_arn):
         create_attachment(cf_message, sns_arn)
     ]
 
-    randoms = [':hypnotoad:', ':corbinspin:']
+    randoms = [':deal_with_it_parrot:', ':awwyiss:']
     for _ in range(1, 8):
         randoms.append(':cloudformation:')
 
@@ -126,7 +126,7 @@ def create_attachment(cf_message, sns_arn):
         'fallback': text,
         'text': text,
         'footer': sns_arn,
-        'footer_icon': 'https://github.com/danieljimenez/cf-notify/raw/master/aws_sns.png',
+        'footer_icon': 'https://github.com/rseaman/cf-notify/raw/master/aws_sns.png',
         'footer_link': 'https://console.aws.amazon.com/sns/v2/home#/topics/{arn}'.format(arn=sns_arn),
         'fields': fields,
         'color': STATUS_COLORS.get(cf_message['ResourceStatus'], '#000000'),
